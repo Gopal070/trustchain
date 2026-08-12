@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrustChain — Certificate Verification</title>
+  <meta name="description" content="Blockchain-powered certificate verification platform. Verify academic credentials instantly with TrustChain." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.6);
+      --border: rgba(99, 102, 241, 0.2);
+      --border-hover: rgba(99, 102, 241, 0.5);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #6366f1;
+      --accent-light: #818cf8;
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --green: #22c55e;
+      --green-bg: rgba(34, 197, 94, 0.1);
+      --green-border: rgba(34, 197, 94, 0.3);
+      --red: #ef4444;
+      --red-bg: rgba(239, 68, 68, 0.1);
+      --red-border: rgba(239, 68, 68, 0.3);
+      --yellow: #eab308;
+      --yellow-bg: rgba(234, 179, 8, 0.1);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ===== Animated Background ===== */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+                  radial-gradient(circle at 50% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+      animation: bgShift 20s ease-in-out infinite;
+      z-index: -1;
+    }
+
+    @keyframes bgShift {
+      0%, 100% { transform: translate(0, 0); }
+      33% { transform: translate(-2%, 1%); }
+      66% { transform: translate(1%, -2%); }
+    }
+
+    /* ===== Header ===== */
+    header {
+      padding: 32px 24px 24px;
+      text-align: center;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    .logo h1 {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--text-primary), var(--accent-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 400;
+    }
+
+    /* ===== Main Container ===== */
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    /* ===== Tab Switcher ===== */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 28px;
+      border: 1px solid var(--border);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .tab:hover { color: var(--text-primary); }
+
+    .tab.active {
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      color: #fff;
+      box-shadow: 0 2px 12px var(--accent-glow);
+    }
+
+    /* ===== Card ===== */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: border-color 0.3s ease;
+    }
+
+    .card:hover { border-color: var(--border-hover); }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .card-desc {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    /* ===== Form Elements ===== */
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: 'Inter', monospace;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.25s ease;
+    }
+
+    input[type="text"]:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    input[type="text"]::placeholder { color: var(--text-muted); }
+
+    /* ===== File Drop Zone ===== */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 36px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: rgba(15, 23, 42, 0.4);
+      position: relative;
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .drop-zone-icon { font-size: 36px; margin-bottom: 10px; }
+
+    .drop-zone-text {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .drop-zone-text span {
+      color: var(--accent-light);
+      font-weight: 600;
+    }
+
+    .drop-zone-hint {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .file-name {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--accent-light);
+      font-weight: 500;
+    }
+
+    /* ===== Button ===== */
+    .btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 20px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      color: #fff;
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px var(--accent-glow);
+    }
+
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* ===== Spinner ===== */
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== Results ===== */
+    .result-container {
+      margin-top: 28px;
+      animation: fadeUp 0.4s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .result-header.verified {
+      background: var(--green-bg);
+      border: 1px solid var(--green-border);
+      color: var(--green);
+    }
+
+    .result-header.not-found {
+      background: var(--red-bg);
+      border: 1px solid var(--red-border);
+      color: var(--red);
+    }
+
+    .result-header.revoked {
+      background: var(--yellow-bg);
+      border: 1px solid rgba(234, 179, 8, 0.3);
+      color: var(--yellow);
+    }
+
+    .result-header .icon { font-size: 24px; }
+
+    .result-body {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+      padding: 20px;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+      font-size: 14px;
+    }
+
+    .result-row:last-child { border-bottom: none; }
+
+    .result-label {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .result-value {
+      color: var(--text-primary);
+      font-weight: 600;
+      text-align: right;
+      max-width: 60%;
+      word-break: break-all;
+    }
+
+    /* ===== Trust Score ===== */
+    .trust-score-ring {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 20px 0;
+    }
+
+    .score-circle {
+      position: relative;
+      width: 140px;
+      height: 140px;
+    }
+
+    .score-circle svg {
+      transform: rotate(-90deg);
+      width: 140px;
+      height: 140px;
+    }
+
+    .score-circle .bg {
+      fill: none;
+      stroke: rgba(148, 163, 184, 0.1);
+      stroke-width: 10;
+    }
+
+    .score-circle .progress {
+      fill: none;
+      stroke-width: 10;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s ease, stroke 0.5s ease;
+    }
+
+    .score-number {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .score-number .value {
+      font-size: 38px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .score-number .label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    .verdict-badge {
+      display: inline-block;
+      padding: 6px 20px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-top: 12px;
+    }
+
+    .verdict-real {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid var(--green-border);
+    }
+
+    .verdict-fake {
+      background: var(--red-bg);
+      color: var(--red);
+      border: 1px solid var(--red-border);
+    }
+
+    .breakdown-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .breakdown-item {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      text-align: center;
+    }
+
+    .breakdown-item .name {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .breakdown-item .score {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .breakdown-item .weight {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ===== Error ===== */
+    .error-msg {
+      margin-top: 16px;
+      padding: 14px 18px;
+      background: var(--red-bg);
+      border: 1px solid var(--red-border);
+      border-radius: var(--radius-sm);
+      color: var(--red);
+      font-size: 14px;
+      font-weight: 500;
+      animation: fadeUp 0.3s ease;
+    }
+
+    /* ===== Section Hidden ===== */
+    .hidden { display: none !important; }
+
+    /* ===== Footer ===== */
+    footer {
+      text-align: center;
+      padding: 32px 20px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    footer a {
+      color: var(--accent-light);
+      text-decoration: none;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 600px) {
+      .breakdown-grid { grid-template-columns: 1fr; }
+      .result-row { flex-direction: column; gap: 4px; }
+      .result-value { text-align: left; max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🔗</div>
+      <h1>TrustChain</h1>
+    </div>
+    <p>Blockchain-Powered Certificate Verification</p>
+  </header>
+
+  <main>
+    <!-- Tab Switcher -->
+    <div class="tabs" role="tablist">
+      <button class="tab active" id="tab-hash" onclick="switchTab('hash')" role="tab" aria-selected="true">🔍 Verify by Hash</button>
+      <button class="tab" id="tab-upload" onclick="switchTab('upload')" role="tab" aria-selected="false">📄 Verify by File</button>
+    </div>
+
+    <!-- ===== HASH VERIFICATION ===== -->
+    <section id="section-hash">
+      <div class="card">
+        <div class="card-title">Hash Verification</div>
+        <div class="card-desc">Enter the SHA-256 hash of a certificate to verify it on the Ethereum blockchain.</div>
+
+        <label for="hashInput">Certificate Hash (64 characters)</label>
+        <input type="text" id="hashInput" placeholder="e.g. e3fa4801f556c8d8477f2eb0d4fdc84e63eb1e89b0559c16c168a1f548069c0c" maxlength="64" spellcheck="false" autocomplete="off" />
+
+        <button class="btn btn-primary" id="btnVerifyHash" onclick="verifyByHash()">
+          Verify Certificate
+        </button>
+
+        <div id="hashError" class="error-msg hidden"></div>
+        <div id="hashResult" class="hidden"></div>
+      </div>
+    </section>
+
+    <!-- ===== FILE UPLOAD VERIFICATION ===== -->
+    <section id="section-upload" class="hidden">
+      <div class="card">
+        <div class="card-title">File Verification</div>
+        <div class="card-desc">Upload a certificate file to compute its hash, verify it on-chain, and receive a trust score.</div>
+
+        <label>Certificate File</label>
+        <div class="drop-zone" id="dropZone">
+          <div class="drop-zone-icon">📁</div>
+          <div class="drop-zone-text">Drag & drop your file here or <span>browse</span></div>
+          <div class="drop-zone-hint">Accepts PDF, JPG, PNG (max 10 MB)</div>
+          <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" />
+          <div class="file-name hidden" id="fileName"></div>
+        </div>
+
+        <label style="margin-top:18px" for="issuerSelect">Issuer Institution</label>
+        <select id="issuerSelect">
+          <option value="IIT Delhi">IIT Delhi</option>
+          <option value="IIT Bombay">IIT Bombay</option>
+          <option value="IIT Madras">IIT Madras</option>
+          <option value="BITS Pilani">BITS Pilani</option>
+          <option value="Delhi University">Delhi University</option>
+          <option value="NIT Trichy">NIT Trichy</option>
+          <option value="Mumbai University">Mumbai University</option>
+          <option value="Anna University">Anna University</option>
+          <option value="Other">Other</option>
+        </select>
+
+        <button class="btn btn-primary" id="btnVerifyFile" onclick="verifyByFile()">
+          Upload & Verify
+        </button>
+
+        <div id="fileError" class="error-msg hidden"></div>
+        <div id="fileResult" class="hidden"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Powered by <a href="#">TrustChain</a> · Sepolia Testnet · Smart Contract Verified
+  </footer>
+
+  <script>
+    // ===== TAB SWITCHING =====
+    function switchTab(tab) {
+      document.getElementById('section-hash').classList.toggle('hidden', tab !== 'hash');
+      document.getElementById('section-upload').classList.toggle('hidden', tab !== 'upload');
+      document.getElementById('tab-hash').classList.toggle('active', tab === 'hash');
+      document.getElementById('tab-upload').classList.toggle('active', tab === 'upload');
+    }
+
+    // ===== HASH VERIFICATION =====
+    async function verifyByHash() {
+      const hash = document.getElementById('hashInput').value.trim();
+      const errorEl = document.getElementById('hashError');
+      const resultEl = document.getElementById('hashResult');
+      const btn = document.getElementById('btnVerifyHash');
+
+      errorEl.classList.add('hidden');
+      resultEl.classList.add('hidden');
+
+      if (!hash || hash.length !== 64 || !/^[a-f0-9]{64}$/i.test(hash)) {
+        errorEl.textContent = 'Please enter a valid 64-character hexadecimal SHA-256 hash.';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Verifying on Blockchain…';
+
+      try {
+        const res = await fetch(`/api/verify/hash/${hash}`);
+        const json = await res.json();
+
+        if (!json.success) throw new Error(json.error || 'Verification failed');
+
+        const d = json.data;
+        renderHashResult(d, resultEl);
+      } catch (err) {
+        errorEl.textContent = err.message || 'Network error. Is the backend running?';
+        errorEl.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Verify Certificate';
+      }
+    }
+
+    function renderHashResult(d, container) {
+      const found = d.found || d.verified;
+      const valid = d.isValid;
+      let headerClass, headerIcon, headerText;
+
+      if (!found) {
+        headerClass = 'not-found';
+        headerIcon = '❌';
+        headerText = 'Certificate Not Found';
+      } else if (!valid) {
+        headerClass = 'revoked';
+        headerIcon = '⚠️';
+        headerText = 'Certificate Revoked';
+      } else {
+        headerClass = 'verified';
+        headerIcon = '✅';
+        headerText = 'Certificate Verified';
+      }
+
+      const rows = found ? `
+        <div class="result-row"><span class="result-label">Certificate ID</span><span class="result-value">${d.certId}</span></div>
+        <div class="result-row"><span class="result-label">Student</span><span class="result-value">${d.student}</span></div>
+        <div class="result-row"><span class="result-label">Degree</span><span class="result-value">${d.degree}</span></div>
+        <div class="result-row"><span class="result-label">Year</span><span class="result-value">${d.year}</span></div>
+        <div class="result-row"><span class="result-label">Issuer</span><span class="result-value">${d.issuer}</span></div>
+        <div class="result-row"><span class="result-label">Blockchain Status</span><span class="result-value">${d.message}</span></div>
+      ` : `
+        <div class="result-row"><span class="result-label">Message</span><span class="result-value">${d.message}</span></div>
+      `;
+
+      container.innerHTML = `
+        <div class="result-container">
+          <div class="result-header ${headerClass}">
+            <span class="icon">${headerIcon}</span>
+            ${headerText}
+          </div>
+          <div class="result-body">${rows}</div>
+        </div>
+      `;
+      container.classList.remove('hidden');
+    }
+
+    // ===== FILE UPLOAD VERIFICATION =====
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const fileNameEl = document.getElementById('fileName');
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) {
+        fileNameEl.textContent = '📎 ' + fileInput.files[0].name;
+        fileNameEl.classList.remove('hidden');
+      }
+    });
+
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        fileNameEl.textContent = '📎 ' + e.dataTransfer.files[0].name;
+        fileNameEl.classList.remove('hidden');
+      }
+    });
+
+    async function verifyByFile() {
+      const errorEl = document.getElementById('fileError');
+      const resultEl = document.getElementById('fileResult');
+      const btn = document.getElementById('btnVerifyFile');
+
+      errorEl.classList.add('hidden');
+      resultEl.classList.add('hidden');
+
+      if (!fileInput.files.length) {
+        errorEl.textContent = 'Please select a certificate file to upload.';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append('certificate', fileInput.files[0]);
+      fd.append('issuerName', document.getElementById('issuerSelect').value);
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Analyzing Certificate…';
+
+      try {
+        const res = await fetch('/api/verify', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer demo-token' },
+          body: fd,
+        });
+        const json = await res.json();
+
+        if (!json.success) throw new Error(json.error || 'Upload verification failed');
+
+        renderFileResult(json.data, resultEl);
+      } catch (err) {
+        errorEl.textContent = err.message || 'Upload failed. Is the backend running?';
+        errorEl.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Upload & Verify';
+      }
+    }
+
+    function renderFileResult(d, container) {
+      const score = d.trustScore || 0;
+      const verdict = d.verdict || 'UNKNOWN';
+      const circumference = 2 * Math.PI * 54;
+      const offset = circumference - (score / 100) * circumference;
+      const strokeColor = score >= 70 ? 'var(--green)' : 'var(--red)';
+      const scoreColor = score >= 70 ? 'var(--green)' : 'var(--red)';
+
+      const breakdown = d.breakdown || {};
+
+      container.innerHTML = `
+        <div class="result-container">
+          <div class="trust-score-ring">
+            <div class="score-circle">
+              <svg viewBox="0 0 120 120">
+                <circle class="bg" cx="60" cy="60" r="54" />
+                <circle class="progress" cx="60" cy="60" r="54"
+                  stroke="${strokeColor}"
+                  stroke-dasharray="${circumference}"
+                  stroke-dashoffset="${offset}" />
+              </svg>
+              <div class="score-number">
+                <span class="value" style="color:${scoreColor}">${score}</span>
+                <span class="label">Trust Score</span>
+              </div>
+            </div>
+            <div class="verdict-badge ${verdict === 'REAL' ? 'verdict-real' : 'verdict-fake'}">
+              ${verdict === 'REAL' ? '✅' : '❌'} ${verdict}
+            </div>
+          </div>
+
+          <div class="breakdown-grid">
+            ${renderBreakdownItem('Blockchain', breakdown.blockchain)}
+            ${renderBreakdownItem('AI Analysis', breakdown.ai)}
+            ${renderBreakdownItem('Issuer DB', breakdown.issuer)}
+          </div>
+
+          <div class="result-body" style="margin-top:16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+            <div class="result-row"><span class="result-label">File Hash</span><span class="result-value" style="font-size:12px">${d.fileHash || 'N/A'}</span></div>
+            <div class="result-row"><span class="result-label">Issuer</span><span class="result-value">${d.issuerName || 'N/A'}</span></div>
+            <div class="result-row"><span class="result-label">Verified At</span><span class="result-value">${d.verifiedAt ? new Date(d.verifiedAt).toLocaleString() : 'N/A'}</span></div>
+          </div>
+        </div>
+      `;
+      container.classList.remove('hidden');
+    }
+
+    function renderBreakdownItem(name, data) {
+      if (!data) return '';
+      const color = data.score >= 70 ? 'var(--green)' : data.score > 0 ? 'var(--yellow)' : 'var(--red)';
+      return `
+        <div class="breakdown-item">
+          <div class="name">${name}</div>
+          <div class="score" style="color:${color}">${data.score}</div>
+          <div class="weight">${data.weight} weight · ${data.weighted} pts</div>
+        </div>
+      `;
+    }
+
+    // ===== Pre-fill last known hash if available =====
+    document.getElementById('hashInput').value = 'e3fa4801f556c8d8477f2eb0d4fdc84e63eb1e89b0559c16c168a1f548069c0c';
+  </script>
+
+</body>
+</html>

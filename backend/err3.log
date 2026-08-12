@@ -1,0 +1,20 @@
+[dotenv@17.3.1] injecting env (6) from .env -- tip: 🤖 agentic secret storage: https://dotenvx.com/as2
+[dotenv@17.3.1] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+TrustChain backend running on port 5000
+Health check: http://localhost:5000/api/health
+
+C:\Users\gopal\smart-contract\backend\node_modules\ethers\lib.commonjs\utils\errors.js:137
+            error = new Error(message);
+                    ^
+
+Error: an ENS name used for a contract target must be correctly configured (value="", code=UNCONFIGURED_NAME, version=6.16.0)
+    at makeError (C:\Users\gopal\smart-contract\backend\node_modules\ethers\lib.commonjs\utils\errors.js:137:21)
+    at C:\Users\gopal\smart-contract\backend\node_modules\ethers\lib.commonjs\contract\contract.js:578:56
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  code: 'UNCONFIGURED_NAME',
+  value: '',
+  shortMessage: 'an ENS name used for a contract target must be correctly configured'
+}
+
+Node.js v24.11.0

@@ -1,0 +1,27 @@
+# smart-contract/.env
+# Yeh file GITIGNORE mein hai — kabhi GitHub pe push mat karo!
+
+# ============================================
+# 1. Infura ya Alchemy se lo (free account)
+#    infura.io → New Project → Sepolia → Copy URL
+# ============================================
+SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/7db0995db2dd40df8e244dc903bb316b
+
+# ============================================
+# 2. MetaMask se lo
+#    MetaMask → Teen dot → Account Details → Show Private Key
+#    SIRF development wallet use karo — main wallet NAHI!
+# ============================================
+PRIVATE_KEY=0x89f7e967847beeb80ea8da682dc367d5322f89cf455212a7fd75648dd78305e8
+
+# ============================================
+# 3. Deploy ke baad yahan paste karo
+#    Abhi blank chhod do
+# ============================================
+CONTRACT_ADDRESS=
+
+# ============================================
+# 4. Optional — Etherscan pe contract verify karna ho tab
+#    etherscan.io → Sign up → API Keys → Create New Key
+# ============================================
+ETHERSCAN_API_KEY=
